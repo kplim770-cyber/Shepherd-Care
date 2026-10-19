@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shepherd Care - Church Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+  <div id="app" class="max-w-md mx-auto min-h-screen flex flex-col bg-white shadow-xl relative">
+    
+    <!-- HEADER -->
+    <header class="bg-indigo-700 text-white p-4 sticky top-0 z-50 flex justify-between items-center shadow-md">
+      <div>
+        <h1 class="text-xl font-bold flex items-center gap-2">
+          <i data-lucide="church" class="w-6 h-6"></i>
+          Shepherd Care
+        </h1>
+        <p class="text-xs text-indigo-200">Live Pastoral Care & Attendance</p>
+      </div>
+      <div id="connection-badge" class="flex items-center gap-1.5 bg-indigo-800/80 text-emerald-300 text-xs px-2.5 py-1 rounded-full font-medium">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="sync-status">Live</span>
+      </div>
+    </header>
+
+    <!-- NAVIGATION TABS -->
+    <nav class="bg-slate-100 p-1 flex justify-around text-xs font-semibold border-b border-slate-200">
+      <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-btn flex-1 py-2.5 text-center rounded-lg bg-white text-indigo-700 shadow-sm transition">
+        Dashboard
+      </button>
+      <button onclick="switchTab('members')" id="tab-members" class="tab-btn flex-1 py-2.5 text-center text-slate-500 rounded-lg transition">
+        Members
+      </button>
+      <button onclick="switchTab('attendance')" id="tab-attendance" class="tab-btn flex-1 py-2.5 text-center text-slate-500 rounded-lg transition">
+        Attendance
+      </button>
+      <button onclick="switchTab('care')" id="tab-care" class="tab-btn flex-1 py-2.5 text-center text-slate-500 rounded-lg transition">
+        Pastoral Care
+      </button>
+    </nav>
+
+    <!-- CONTENT AREA -->
+    <main class="flex-1 p-4 pb-20">
+      
+      <!-- DASHBOARD TAB -->
+      <section id="sec-dashboard" class="space-y-4">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-gradient-to-br from-indigo-50 to-indigo-100/50 border border-indigo-200 p-4 rounded-xl">
+            <p class="text-xs font-semibold text-indigo-600">Total Members</p>
+            <p id="stat-members" class="text-2xl font-bold text-slate-800 mt-1">0</p>
+          </div>
+          <div class="bg-gradient-to-br from-emerald-50 to-emerald-100/50 border border-emerald-200 p-4 rounded-xl">
+            <p class="text-xs font-semibold text-emerald-600">Present Today</p>
+            <p id="stat-attendance" class="text-2xl font-bold text-slate-800 mt-1">0</p>
+          </div>
+        </div>
+
+        <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-amber-700">Pending Pastoral Visits</p>
+            <p id="stat-care" class="text-xl font-bold text-slate-800 mt-0.5">0</p>
+          </div>
+          <i data-lucide="heart-handshake" class="w-8 h-8 text-amber-500"></i>
+        </div>
+
+        <div class="pt-2">
+          <h2 class="text-sm font-bold text-slate-700 mb-2 flex items-center gap-1.5">
+            <i data-lucide="activity" class="w-4 h-4 text-indigo-600"></i>
+            Recent Activity
+          </h2>
+          <div id="activity-log" class="space-y-2 text-xs text-slate-600">
+            <p class="text-slate-400 italic">Listening for real-time updates...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- MEMBERS TAB -->
+      <section id="sec-members" class="hidden space-y-4">
+        <div class="flex justify-between items-center">
+          <h2 class="font-bold text-slate-800">Member Directory</h2>
+          <button onclick="toggleModal('modal-add-member', true)" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-2 rounded-lg font-medium flex items-center gap-1 shadow-sm">
+            <i data-lucide="user-plus" class="w-4 h-4"></i> Add Member
+          </button>
+        </div>
+        <div id="members-list" class="space-y-2">
+          <div class="text-center py-8 text-slate-400 text-sm">Loading members...</div>
+        </div>
+      </section>
+
+      <!-- ATTENDANCE TAB -->
+      <section id="sec-attendance" class="hidden space-y-4">
+        <div class="bg-slate-100 p-3 rounded-xl space-y-2">
+          <div class="flex justify-between items-center text-xs font-semibold text-slate-600">
+            <span>Service Date</span>
+            <input type="date" id="attendance-date" class="bg-white border rounded-lg px-2 py-1 text-slate-800">
+          </div>
+          <div class="flex justify-between items-center text-xs font-semibold text-slate-600">
+            <span>Service Type</span>
+            <select id="attendance-type" class="bg-white border rounded-lg px-2 py-1 text-slate-800">
+              <option value="Sunday Service">Sunday Service</option>
+              <option value="Mid-week Service">Mid-week Service</option>
+              <option value="Prayer Night">Prayer Night</option>
+            </select>
+          </div>
+        </div>
+        <div id="attendance-list" class="space-y-2">
+          <div class="text-center py-8 text-slate-400 text-sm">Loading members for attendance...</div>
+        </div>
+      </section>
+
+      <!-- PASTORAL CARE TAB -->
+      <section id="sec-care" class="hidden space-y-4">
+        <div class="flex justify-between items-center">
+          <h2 class="font-bold text-slate-800">Pastoral Care Logs</h2>
+          <button onclick="toggleModal('modal-add-care', true)" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-2 rounded-lg font-medium flex items-center gap-1 shadow-sm">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i> Add Care Note
+          </button>
+        </div>
+        <div id="care-list" class="space-y-2">
+          <div class="text-center py-8 text-slate-400 text-sm">Loading pastoral care notes...</div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL: ADD MEMBER -->
+  <div id="modal-add-member" class="hidden fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-5 w-full max-w-xs space-y-3">
+      <h3 class="font-bold text-slate-800 text-lg">Add New Member</h3>
+      <input type="text" id="m-name" placeholder="Full Name" class="w-full border p-2 rounded-lg text-sm">
+      <input type="tel" id="m-phone" placeholder="Phone Number" class="w-full border p-2 rounded-lg text-sm">
+      <select id="m-status" class="w-full border p-2 rounded-lg text-sm">
+        <option value="Active">Active</option>
+        <option value="Visitor">Visitor</option>
+        <option value="New Convert">New Convert</option>
+      </select>
+      <input type="text" id="m-dept" placeholder="Department (e.g., Choir, Usher)" class="w-full border p-2 rounded-lg text-sm">
+      <div class="flex gap-2 pt-2">
+        <button onclick="toggleModal('modal-add-member', false)" class="flex-1 bg-slate-200 text-slate-700 text-sm py-2 rounded-lg font-medium">Cancel</button>
+        <button onclick="saveMember()" class="flex-1 bg-indigo-600 text-white text-sm py-2 rounded-lg font-medium">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD CARE NOTE -->
+  <div id="modal-add-care" class="hidden fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-5 w-full max-w-xs space-y-3">
+      <h3 class="font-bold text-slate-800 text-lg">Add Pastoral Note</h3>
+      <select id="c-member" class="w-full border p-2 rounded-lg text-sm">
+        <option value="">Select Member</option>
+      </select>
+      <select id="c-type" class="w-full border p-2 rounded-lg text-sm">
+        <option value="Home Visit">Home Visit</option>
+        <option value="Counseling">Counseling</option>
+        <option value="Prayer Request">Prayer Request</option>
+        <option value="Phone Call">Phone Call</option>
+      </select>
+      <textarea id="c-details" placeholder="Details or remarks..." class="w-full border p-2 rounded-lg text-sm h-20"></textarea>
+      <div class="flex gap-2 pt-2">
+        <button onclick="toggleModal('modal-add-care', false)" class="flex-1 bg-slate-200 text-slate-700 text-sm py-2 rounded-lg font-medium">Cancel</button>
+        <button onclick="saveCareNote()" class="flex-1 bg-indigo-600 text-white text-sm py-2 rounded-lg font-medium">Save Note</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // SUPABASE CONFIGURATION
+    const SUPABASE_URL = "https://dxjherwvnynpduuvxzzl.supabase.co";
+    const SUPABASE_KEY = "Sb_publishable_UpHVDMspcfRxGUhrZTEyqQ_4ZD0xpO8";
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let members = [];
+    let attendance = [];
+    let careNotes = [];
+
+    document.getElementById('attendance-date').valueAsDate = new Date();
+
+    async function init() {
+      lucide.createIcons();
+      await fetchMembers();
+      await fetchAttendance();
+      await fetchCareNotes();
+      setupRealtime();
+    }
+
+    function switchTab(tab) {
+      ['dashboard', 'members', 'attendance', 'care'].forEach(t => {
+        document.getElementById(`sec-${t}`).classList.add('hidden');
+        const btn = document.getElementById(`tab-${t}`);
+        btn.classList.remove('bg-white', 'text-indigo-700', 'shadow-sm');
+        btn.classList.add('text-slate-500');
+      });
+
+      document.getElementById(`sec-${tab}`).classList.remove('hidden');
+      const activeBtn = document.getElementById(`tab-${tab}`);
+      activeBtn.classList.add('bg-white', 'text-indigo-700', 'shadow-sm');
+      activeBtn.classList.remove('text-slate-500');
+    }
+
+    function toggleModal(id, show) {
+      document.getElementById(id).classList.toggle('hidden', !show);
+    }
+
+    async function fetchMembers() {
+      const { data } = await sb.from('members').select('*').order('created_at', { ascending: false });
+      members = data || [];
+      renderMembers();
+      updateCareDropdown();
+      document.getElementById('stat-members').innerText = members.length;
+    }
+
+    function renderMembers() {
+      const container = document.getElementById('members-list');
+      if (!members.length) {
+        container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">No members added yet.</div>`;
+        return;
+      }
+      container.innerHTML = members.map(m => `
+        <div class="bg-white border rounded-xl p-3 shadow-sm flex justify-between items-center">
+          <div>
+            <p class="font-bold text-slate-800 text-sm">${m.full_name}</p>
+            <p class="text-xs text-slate-500">${m.phone || 'No phone'} • ${m.department || 'General'}</p>
+          </div>
+          <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full ${m.status === 'Active' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">${m.status}</span>
+        </div>
+      `).join('');
+    }
+
+    async function saveMember() {
+      const full_name = document.getElementById('m-name').value;
+      const phone = document.getElementById('m-phone').value;
+      const status = document.getElementById('m-status').value;
+      const department = document.getElementById('m-dept').value;
+
+      if (!full_name) return alert('Member name is required');
+
+      await sb.from('members').insert([{ full_name, phone, status, department }]);
+      toggleModal('modal-add-member', false);
+      document.getElementById('m-name').value = '';
+      document.getElementById('m-phone').value = '';
+    }
+
+    async function fetchAttendance() {
+      const date = document.getElementById('attendance-date').value;
+      const { data } = await sb.from('attendance').select('*').eq('service_date', date);
+      attendance = data || [];
+      renderAttendance();
+    }
+
+    function renderAttendance() {
+      const container = document.getElementById('attendance-list');
+      if (!members.length) {
+        container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">Add members first to mark attendance.</div>`;
+        return;
+      }
+      container.innerHTML = members.map(m => {
+        const record = attendance.find(a => a.member_id === m.id);
+        const status = record ? record.status : 'Absent';
+        return `
+          <div class="bg-white border rounded-xl p-3 flex justify-between items-center">
+            <span class="font-medium text-xs text-slate-800">${m.full_name}</span>
+            <button onclick="toggleAttendance('${m.id}', '${status}')" class="text-xs px-3 py-1 rounded-lg font-semibold transition ${status === 'Present' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500'}">
+              ${status}
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      const presentCount = attendance.filter(a => a.status === 'Present').length;
+      document.getElementById('stat-attendance').innerText = presentCount;
+    }
+
+    async function toggleAttendance(member_id, currentStatus) {
+      const date = document.getElementById('attendance-date').value;
+      const type = document.getElementById('attendance-type').value;
+      const newStatus = currentStatus === 'Present' ? 'Absent' : 'Present';
+
+      const existing = attendance.find(a => a.member_id === member_id);
+      if (existing) {
+        await sb.from('attendance').update({ status: newStatus }).eq('id', existing.id);
+      } else {
+        await sb.from('attendance').insert([{ member_id, service_date: date, service_type: type, status: newStatus }]);
+      }
+      fetchAttendance();
+    }
+
+    async function fetchCareNotes() {
+      const { data } = await sb.from('pastoral_care').select('*, members(full_name)').order('created_at', { ascending: false });
+      careNotes = data || [];
+      renderCareNotes();
+      const pending = careNotes.filter(c => c.status === 'Pending').length;
+      document.getElementById('stat-care').innerText = pending;
+    }
+
+    function renderCareNotes() {
+      const container = document.getElementById('care-list');
+      if (!careNotes.length) {
+        container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">No care notes logged.</div>`;
+        return;
+      }
+      container.innerHTML = careNotes.map(c => `
+        <div class="bg-white border rounded-xl p-3 shadow-sm space-y-1">
+          <div class="flex justify-between items-center">
+            <p class="font-bold text-slate-800 text-xs">${c.members?.full_name || 'Member'}</p>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-semibold">${c.note_type}</span>
+          </div>
+          <p class="text-xs text-slate-600">${c.details}</p>
+        </div>
+      `).join('');
+    }
+
+    function updateCareDropdown() {
+      const select = document.getElementById('c-member');
+      select.innerHTML = '<option value="">Select Member</option>' + members.map(m => `<option value="${m.id}">${m.full_name}</option>`).join('');
+    }
+
+    async function saveCareNote() {
+      const member_id = document.getElementById('c-member').value;
+      const note_type = document.getElementById('c-type').value;
+      const details = document.getElementById('c-details').value;
+
+      if (!member_id || !details) return alert('Member and details are required');
+
+      await sb.from('pastoral_care').insert([{ member_id, note_type, details, status: 'Pending' }]);
+      toggleModal('modal-add-care', false);
+      document.getElementById('c-details').value = '';
+    }
+
+    function setupRealtime() {
+      sb.channel('db-changes')
+        .on('postgres_changes', { event: '*', schema: 'public' }, () => {
+          fetchMembers();
+          fetchAttendance();
+          fetchCareNotes();
+        })
+        .subscribe();
+    }
+
+    document.getElementById('attendance-date').addEventListener('change', fetchAttendance);
+
+    window.onload = init;
+  </script>
+</body>
+</html>
