@@ -1,2 +1,452 @@
-# Shepherd-Care
-Church Management and Pastoral Care Portal⁠
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Synago - Shepherd Care Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen">
+
+  <div id="app" class="max-w-md mx-auto min-h-screen bg-slate-50 shadow-2xl relative flex flex-col overflow-hidden">
+    
+    <!-- TOP HEADER BAR -->
+    <header class="bg-white border-b border-slate-200 px-4 py-3 flex justify-between items-center sticky top-0 z-30">
+      <div class="flex items-center gap-3">
+        <button onclick="toggleSidebar(true)" class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-700 transition">
+          <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 bg-rose-500 rounded-xl flex items-center justify-center text-white shadow-sm shadow-rose-200">
+            <i data-lucide="layers" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h1 class="font-bold text-slate-900 text-base leading-none">Synago</h1>
+            <p class="text-[11px] text-slate-400 font-medium">Shepherd Care Portal</p>
+          </div>
+        </div>
+      </div>
+      <div id="connection-badge" class="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs px-2.5 py-1 rounded-full font-semibold">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span>Live</span>
+      </div>
+    </header>
+
+    <!-- SIDEBAR DRAWER OVERLAY -->
+    <div id="sidebar-overlay" onclick="toggleSidebar(false)" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 transition-opacity"></div>
+
+    <!-- SYNAGO SIDEBAR MENU -->
+    <aside id="sidebar-menu" class="fixed top-0 left-0 bottom-0 w-80 bg-white z-50 transform -translate-x-full transition-transform duration-300 ease-in-out flex flex-col shadow-2xl">
+      <!-- Sidebar Header -->
+      <div class="p-4 flex items-center justify-between border-b border-slate-100">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 bg-rose-500 rounded-xl flex items-center justify-center text-white shadow-md shadow-rose-200">
+            <i data-lucide="layers" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h2 class="font-bold text-slate-900 text-base leading-tight">Synago</h2>
+            <p class="text-xs text-slate-400">FLC Servants Portal</p>
+          </div>
+        </div>
+        <button onclick="toggleSidebar(false)" class="p-2 rounded-full text-slate-400 hover:bg-slate-100">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Search Box -->
+      <div class="px-4 pt-4">
+        <div class="relative">
+          <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-3"></i>
+          <input type="text" placeholder="Search" class="w-full bg-slate-100 border-none rounded-xl pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 text-slate-700">
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <div class="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+        <button onclick="switchView('home')" id="nav-home" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm text-slate-900 bg-slate-100">
+          <i data-lucide="home" class="w-5 h-5 text-slate-700"></i> Home
+        </button>
+        <button onclick="switchView('members')" id="nav-members" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-50">
+          <i data-lucide="users" class="w-5 h-5 text-slate-500"></i> Members
+        </button>
+        <button onclick="switchView('services')" id="nav-services" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-50">
+          <i data-lucide="clipboard-list" class="w-5 h-5 text-slate-500"></i> Services & Attendance
+        </button>
+
+        <div class="my-3 border-t border-slate-100"></div>
+
+        <button onclick="switchView('reports')" id="nav-reports" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-50">
+          <i data-lucide="download" class="w-5 h-5 text-slate-500"></i> Reports
+        </button>
+        <button onclick="switchView('trends')" id="nav-trends" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-50">
+          <i data-lucide="trending-up" class="w-5 h-5 text-slate-500"></i> Trends
+        </button>
+
+        <button onclick="switchView('ai')" id="nav-ai" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-50">
+          <i data-lucide="bot" class="w-5 h-5 text-slate-500"></i> AI Assistant
+        </button>
+        <button onclick="switchView('settings')" id="nav-settings" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:bg-slate-50">
+          <i data-lucide="settings" class="w-5 h-5 text-slate-500"></i> Settings
+        </button>
+
+        <div class="pt-2 flex items-center justify-between px-3 text-sm text-slate-500 font-medium">
+          <span class="flex items-center gap-2"><i data-lucide="languages" class="w-4 h-4"></i> Language</span>
+          <span class="text-xs font-semibold text-slate-400">English</span>
+        </div>
+      </div>
+
+      <!-- User Profile Footer -->
+      <div class="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-slate-300 flex items-center justify-center font-bold text-slate-700 text-sm overflow-hidden">
+            <span id="user-avatar-initials">ED</span>
+          </div>
+          <div>
+            <p class="text-[11px] text-slate-400 font-medium">Signed in as</p>
+            <p id="user-display-name" class="font-bold text-slate-800 text-sm leading-tight">Emmanuel Doe</p>
+          </div>
+        </div>
+        <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400"></i>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT VIEW -->
+    <main class="flex-1 p-4 overflow-y-auto space-y-4">
+
+      <!-- HOME VIEW -->
+      <section id="view-home" class="space-y-4">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">Dashboard</h2>
+            <p class="text-xs text-slate-500">Overview of church growth & care</p>
+          </div>
+          <button onclick="toggleModal('modal-add-member', true)" class="bg-rose-500 hover:bg-rose-600 text-white text-xs px-3 py-2 rounded-xl font-semibold shadow-md shadow-rose-200 flex items-center gap-1.5 transition">
+            <i data-lucide="plus" class="w-4 h-4"></i> Add Member
+          </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-white border border-slate-200/80 p-4 rounded-2xl shadow-xs">
+            <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mb-2">
+              <i data-lucide="users" class="w-4 h-4"></i>
+            </div>
+            <p class="text-xs font-semibold text-slate-500">Total Members</p>
+            <p id="stat-members" class="text-2xl font-bold text-slate-900 mt-0.5">0</p>
+          </div>
+
+          <div class="bg-white border border-slate-200/80 p-4 rounded-2xl shadow-xs">
+            <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2">
+              <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+            </div>
+            <p class="text-xs font-semibold text-slate-500">Present Today</p>
+            <p id="stat-attendance" class="text-2xl font-bold text-slate-900 mt-0.5">0</p>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200/80 p-4 rounded-2xl shadow-xs flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500">Pastoral Care Logs</p>
+            <p id="stat-care" class="text-xl font-bold text-slate-900 mt-0.5">0 Notes</p>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center">
+            <i data-lucide="heart-handshake" class="w-5 h-5"></i>
+          </div>
+        </div>
+
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-xs space-y-3">
+          <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <i data-lucide="activity" class="w-4 h-4 text-rose-500"></i> Recent Shepherd Logs
+          </h3>
+          <div id="care-list" class="space-y-2">
+            <p class="text-xs text-slate-400 italic">Loading notes...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- MEMBERS VIEW -->
+      <section id="view-members" class="hidden space-y-4">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-xl font-bold text-slate-900">Members Directory</h2>
+            <p class="text-xs text-slate-500">All registered church members</p>
+          </div>
+          <button onclick="toggleModal('modal-add-member', true)" class="bg-rose-500 text-white text-xs px-3 py-2 rounded-xl font-semibold shadow-md shadow-rose-200">
+            + Add
+          </button>
+        </div>
+        <div id="members-list" class="space-y-2">
+          <div class="text-center py-10 text-slate-400 text-sm">Loading members...</div>
+        </div>
+      </section>
+
+      <!-- SERVICES & ATTENDANCE VIEW -->
+      <section id="view-services" class="hidden space-y-4">
+        <h2 class="text-xl font-bold text-slate-900">Services & Attendance</h2>
+        <div class="bg-white p-3 border border-slate-200/80 rounded-2xl space-y-2">
+          <div class="flex justify-between items-center text-xs font-semibold text-slate-600">
+            <span>Date</span>
+            <input type="date" id="attendance-date" class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-slate-800">
+          </div>
+          <div class="flex justify-between items-center text-xs font-semibold text-slate-600">
+            <span>Service</span>
+            <select id="attendance-type" class="bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-slate-800">
+              <option value="Sunday Service">Sunday Service</option>
+              <option value="Mid-week Service">Mid-week Service</option>
+              <option value="Bacenta Meeting">Bacenta Meeting</option>
+            </select>
+          </div>
+        </div>
+        <div id="attendance-list" class="space-y-2">
+          <div class="text-center py-8 text-slate-400 text-sm">Loading attendance list...</div>
+        </div>
+      </section>
+
+      <!-- REPORTS VIEW -->
+      <section id="view-reports" class="hidden space-y-4">
+        <h2 class="text-xl font-bold text-slate-900">Reports</h2>
+        <div class="bg-white p-5 border border-slate-200/80 rounded-2xl text-center space-y-2">
+          <i data-lucide="file-text" class="w-10 h-10 text-slate-300 mx-auto"></i>
+          <p class="font-semibold text-slate-700 text-sm">Weekly Attendance Report</p>
+          <p class="text-xs text-slate-400">Generate PDF or Excel exports for leadership submission.</p>
+        </div>
+      </section>
+
+      <!-- TRENDS VIEW -->
+      <section id="view-trends" class="hidden space-y-4">
+        <h2 class="text-xl font-bold text-slate-900">Attendance Trends</h2>
+        <div class="bg-white p-5 border border-slate-200/80 rounded-2xl text-center space-y-2">
+          <i data-lucide="line-chart" class="w-10 h-10 text-slate-300 mx-auto"></i>
+          <p class="font-semibold text-slate-700 text-sm">Growth Analytics</p>
+          <p class="text-xs text-slate-400">Monthly attendance retention and Bacenta expansion metrics.</p>
+        </div>
+      </section>
+
+      <!-- AI ASSISTANT VIEW -->
+      <section id="view-ai" class="hidden space-y-4">
+        <h2 class="text-xl font-bold text-slate-900">Shepherd AI Assistant</h2>
+        <div class="bg-white p-4 border border-slate-200/80 rounded-2xl space-y-3">
+          <p class="text-xs text-slate-500">Ask Shepherd AI to generate follow-up messages or summarize pastoral notes.</p>
+          <textarea placeholder="Ask AI e.g. 'Draft a encouraging WhatsApp message for a member missing service...'" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20 h-24"></textarea>
+          <button class="w-full bg-rose-500 text-white text-xs font-semibold py-2.5 rounded-xl shadow-md shadow-rose-200">
+            Generate Insight
+          </button>
+        </div>
+      </section>
+
+      <!-- SETTINGS VIEW -->
+      <section id="view-settings" class="hidden space-y-4">
+        <h2 class="text-xl font-bold text-slate-900">Portal Settings</h2>
+        <div class="bg-white p-4 border border-slate-200/80 rounded-2xl space-y-3 text-xs">
+          <p class="font-semibold text-slate-700">Database Connection</p>
+          <p class="text-slate-400">Connected to Supabase project with real-time replication.</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL: ADD MEMBER -->
+  <div id="modal-add-member" class="hidden fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl p-5 w-full max-w-xs space-y-3 shadow-2xl">
+      <h3 class="font-bold text-slate-900 text-lg">Add New Member</h3>
+      <input type="text" id="m-name" placeholder="Full Name" class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs">
+      <input type="tel" id="m-phone" placeholder="Phone Number" class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs">
+      <select id="m-status" class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs">
+        <option value="Active">Active</option>
+        <option value="Visitor">Visitor</option>
+        <option value="New Convert">New Convert</option>
+      </select>
+      <input type="text" id="m-dept" placeholder="Bacenta / Fellowship Group" class="w-full bg-slate-50 border p-2.5 rounded-xl text-xs">
+      <div class="flex gap-2 pt-2">
+        <button onclick="toggleModal('modal-add-member', false)" class="flex-1 bg-slate-100 text-slate-700 text-xs py-2.5 rounded-xl font-semibold">Cancel</button>
+        <button onclick="saveMember()" class="flex-1 bg-rose-500 text-white text-xs py-2.5 rounded-xl font-semibold shadow-md shadow-rose-200">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://dxjherwvnynpduuvxzzl.supabase.co";
+    const SUPABASE_KEY = "Sb_publishable_UpHVDMspcfRxGUhrZTEyqQ_4ZD0xpO8";
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let members = [];
+    let attendance = [];
+    let careNotes = [];
+
+    document.getElementById('attendance-date').valueAsDate = new Date();
+
+    async function init() {
+      lucide.createIcons();
+      await fetchMembers();
+      await fetchAttendance();
+      await fetchCareNotes();
+      setupRealtime();
+    }
+
+    function toggleSidebar(show) {
+      const menu = document.getElementById('sidebar-menu');
+      const overlay = document.getElementById('sidebar-overlay');
+      if (show) {
+        menu.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
+      } else {
+        menu.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+      }
+    }
+
+    function switchView(viewName) {
+      ['home', 'members', 'services', 'reports', 'trends', 'ai', 'settings'].forEach(v => {
+        const sec = document.getElementById(`view-${v}`);
+        if (sec) sec.classList.add('hidden');
+        const nav = document.getElementById(`nav-${v}`);
+        if (nav) {
+          nav.classList.remove('bg-slate-100', 'text-slate-900');
+          nav.classList.add('text-slate-600');
+        }
+      });
+
+      const targetSec = document.getElementById(`view-${viewName}`);
+      if (targetSec) targetSec.classList.remove('hidden');
+      
+      const targetNav = document.getElementById(`nav-${viewName}`);
+      if (targetNav) {
+        targetNav.classList.add('bg-slate-100', 'text-slate-900');
+        targetNav.classList.remove('text-slate-600');
+      }
+
+      toggleSidebar(false);
+    }
+
+    function toggleModal(id, show) {
+      document.getElementById(id).classList.toggle('hidden', !show);
+    }
+
+    async function fetchMembers() {
+      const { data } = await sb.from('members').select('*').order('created_at', { ascending: false });
+      members = data || [];
+      renderMembers();
+      document.getElementById('stat-members').innerText = members.length;
+    }
+
+    function renderMembers() {
+      const container = document.getElementById('members-list');
+      if (!members.length) {
+        container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs">No members added yet.</div>`;
+        return;
+      }
+      container.innerHTML = members.map(m => `
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-3 shadow-xs flex justify-between items-center">
+          <div>
+            <p class="font-bold text-slate-900 text-xs">${m.full_name}</p>
+            <p class="text-[11px] text-slate-400">${m.phone || 'No phone'} • ${m.department || 'General'}</p>
+          </div>
+          <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full ${m.status === 'Active' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-amber-50 text-amber-600 border border-amber-200'}">${m.status}</span>
+        </div>
+      `).join('');
+    }
+
+    async function saveMember() {
+      const full_name = document.getElementById('m-name').value;
+      const phone = document.getElementById('m-phone').value;
+      const status = document.getElementById('m-status').value;
+      const department = document.getElementById('m-dept').value;
+
+      if (!full_name) return alert('Member name is required');
+
+      await sb.from('members').insert([{ full_name, phone, status, department }]);
+      toggleModal('modal-add-member', false);
+      document.getElementById('m-name').value = '';
+      document.getElementById('m-phone').value = '';
+    }
+
+    async function fetchAttendance() {
+      const date = document.getElementById('attendance-date').value;
+      const { data } = await sb.from('attendance').select('*').eq('service_date', date);
+      attendance = data || [];
+      renderAttendance();
+    }
+
+    function renderAttendance() {
+      const container = document.getElementById('attendance-list');
+      if (!members.length) {
+        container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs">Add members first.</div>`;
+        return;
+      }
+      container.innerHTML = members.map(m => {
+        const record = attendance.find(a => a.member_id === m.id);
+        const status = record ? record.status : 'Absent';
+        return `
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-3 flex justify-between items-center shadow-xs">
+            <span class="font-semibold text-xs text-slate-800">${m.full_name}</span>
+            <button onclick="toggleAttendance('${m.id}', '${status}')" class="text-xs px-3 py-1 rounded-xl font-bold transition ${status === 'Present' ? 'bg-emerald-500 text-white shadow-xs' : 'bg-slate-100 text-slate-400'}">
+              ${status}
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      const presentCount = attendance.filter(a => a.status === 'Present').length;
+      document.getElementById('stat-attendance').innerText = presentCount;
+    }
+
+    async function toggleAttendance(member_id, currentStatus) {
+      const date = document.getElementById('attendance-date').value;
+      const type = document.getElementById('attendance-type').value;
+      const newStatus = currentStatus === 'Present' ? 'Absent' : 'Present';
+
+      const existing = attendance.find(a => a.member_id === member_id);
+      if (existing) {
+        await sb.from('attendance').update({ status: newStatus }).eq('id', existing.id);
+      } else {
+        await sb.from('attendance').insert([{ member_id, service_date: date, service_type: type, status: newStatus }]);
+      }
+      fetchAttendance();
+    }
+
+    async function fetchCareNotes() {
+      const { data } = await sb.from('pastoral_care').select('*, members(full_name)').order('created_at', { ascending: false });
+      careNotes = data || [];
+      renderCareNotes();
+      document.getElementById('stat-care').innerText = `${careNotes.length} Notes`;
+    }
+
+    function renderCareNotes() {
+      const container = document.getElementById('care-list');
+      if (!careNotes.length) {
+        container.innerHTML = `<div class="text-center py-4 text-slate-400 text-xs">No care notes logged.</div>`;
+        return;
+      }
+      container.innerHTML = careNotes.map(c => `
+        <div class="bg-slate-50 border border-slate-200/60 rounded-xl p-2.5 text-xs space-y-1">
+          <div class="flex justify-between items-center">
+            <p class="font-bold text-slate-800">${c.members?.full_name || 'Member'}</p>
+            <span class="text-[10px] font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200">${c.note_type}</span>
+          </div>
+          <p class="text-slate-600 text-[11px]">${c.details}</p>
+        </div>
+      `).join('');
+    }
+
+    function setupRealtime() {
+      sb.channel('db-changes')
+        .on('postgres_changes', { event: '*', schema: 'public' }, () => {
+          fetchMembers();
+          fetchAttendance();
+          fetchCareNotes();
+        })
+        .subscribe();
+    }
+
+    document.getElementById('attendance-date').addEventListener('change', fetchAttendance);
+
+    window.onload = init;
+  </script>
+</body>
+</html>
