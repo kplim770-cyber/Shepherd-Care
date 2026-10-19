@@ -176,7 +176,7 @@
             <h2 class="text-xl font-bold text-slate-900">Members Directory</h2>
             <p class="text-xs text-slate-500">All registered church members</p>
           </div>
-          <button onclick="toggleModal('modal-add-member', true)" class="bg-rose-500 text-white text-xs px-3 py-2 rounded-xl font-semibold shadow-md shadow-rose-200">
+          <button onclick="toggleModal('modal-add-member', true)" class="bg-rose-500 hover:bg-rose-600 text-white text-xs px-3 py-2 rounded-xl font-semibold shadow-md shadow-rose-200 transition">
             + Add
           </button>
         </div>
@@ -232,7 +232,7 @@
         <h2 class="text-xl font-bold text-slate-900">Shepherd AI Assistant</h2>
         <div class="bg-white p-4 border border-slate-200/80 rounded-2xl space-y-3">
           <p class="text-xs text-slate-500">Ask Shepherd AI to generate follow-up messages or summarize pastoral notes.</p>
-          <textarea placeholder="Ask AI e.g. 'Draft a encouraging WhatsApp message for a member missing service...'" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20 h-24"></textarea>
+          <textarea placeholder="Ask AI e.g. 'Draft an encouraging WhatsApp message for a member missing service...'" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs focus:outline-none focus:ring-2 focus:ring-rose-500/20 h-24"></textarea>
           <button class="w-full bg-rose-500 text-white text-xs font-semibold py-2.5 rounded-xl shadow-md shadow-rose-200">
             Generate Insight
           </button>
@@ -364,6 +364,7 @@
       toggleModal('modal-add-member', false);
       document.getElementById('m-name').value = '';
       document.getElementById('m-phone').value = '';
+      await fetchMembers();
     }
 
     async function fetchAttendance() {
